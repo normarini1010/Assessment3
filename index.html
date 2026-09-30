@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UMC735 Innovation Diagnostic Challenge</title>
+<style>
+:root{
+ --blue:#0057a6;--blue-dark:#00386f;--purple:#6b2c91;--purple-soft:#8a4db0;
+ --gold:#d9a62e;--gold-light:#f3d77b;--white:#fff;--grey:#f4f6f9;
+ --soft-blue:#eaf4fb;--lav:#f3ecf8;--ink:#17233b;--muted:#667085;
+ --green:#177b55;--green-bg:#eaf8f1;--red:#b83b45;--red-bg:#fff0f1;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--ink);
+ background:linear-gradient(135deg,#eef5fb,#faf8fc 55%,#fff9e8);min-height:100vh}
+.wrap{width:min(1000px,calc(100% - 22px));margin:22px auto 38px}
+.hero{position:relative;overflow:hidden;padding:32px;border-radius:30px;color:white;
+ background:linear-gradient(135deg,var(--blue-dark),var(--blue) 52%,var(--purple));
+ box-shadow:0 22px 46px rgba(26,51,93,.24)}
+.hero:after{content:"";position:absolute;width:155px;height:155px;border-radius:38px;right:-30px;top:-42px;
+ background:linear-gradient(145deg,var(--gold-light),var(--gold));
+ box-shadow:inset 14px 14px 24px rgba(255,255,255,.5),inset -12px -12px 20px rgba(111,77,0,.15);
+ transform:rotate(17deg)}
+.hero:before{content:"";position:absolute;width:78px;height:78px;border-radius:24px;right:145px;bottom:-27px;
+ background:linear-gradient(145deg,#b7dcf7,var(--purple-soft));
+ box-shadow:inset 9px 9px 16px rgba(255,255,255,.48);transform:rotate(-12deg)}
+.hero>*{position:relative;z-index:2}.hero h1{margin:0 0 8px;font-size:clamp(1.9rem,4vw,3rem)}
+.hero p{margin:0;max-width:750px;line-height:1.6;color:rgba(255,255,255,.92)}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:17px}.tag{padding:7px 11px;border-radius:999px;
+ background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.24);font-size:.86rem;font-weight:700}
+.progressbox{margin-top:18px;padding:12px 14px;border-radius:17px;background:rgba(255,255,255,.14)}
+.prow{display:flex;justify-content:space-between;gap:12px;font-size:.88rem;margin-bottom:7px}
+.track{height:10px;background:rgba(255,255,255,.22);border-radius:999px;overflow:hidden}
+.bar{height:100%;width:0;background:linear-gradient(90deg,var(--gold-light),white);transition:.3s}
+.panel{margin-top:20px;padding:27px;border-radius:28px;background:rgba(255,255,255,.94);
+ box-shadow:0 16px 34px rgba(38,53,83,.14);border:1px solid rgba(255,255,255,.8)}
+.case-no{display:inline-block;padding:8px 12px;border-radius:14px;background:linear-gradient(145deg,#fff,#e5ebf3);
+ box-shadow:inset 3px 3px 7px white,inset -5px -5px 10px rgba(80,95,125,.10);font-weight:800;color:var(--purple)}
+.case-title{margin:13px 0 7px;font-size:1.45rem}.scenario{line-height:1.65;color:#39465f}
+.step{margin-top:22px;padding:19px;border-radius:22px;background:linear-gradient(145deg,#fff,#edf2f7);
+ box-shadow:inset 4px 4px 10px white,inset -6px -6px 12px rgba(76,91,121,.08)}
+.step h3{margin:0 0 5px;color:var(--blue)}.hint{margin:0 0 13px;color:var(--muted);font-size:.92rem}
+.options{display:grid;gap:10px}.option{display:flex;align-items:flex-start;gap:10px;padding:13px 14px;
+ border:2px solid #dfe6ef;border-radius:16px;background:white;cursor:pointer;transition:.16s}
+.option:hover{border-color:#9bbddd}.option input{margin-top:3px;accent-color:var(--purple)}
+.option.selected{border-color:var(--blue);background:var(--soft-blue)}
+.option.correct{border-color:var(--green);background:var(--green-bg)}
+.option.wrong{border-color:var(--red);background:var(--red-bg)}
+.feedback{display:none;margin-top:14px;padding:14px 16px;border-radius:16px;line-height:1.55}
+.feedback.show{display:block}.feedback.good{background:var(--green-bg);color:#12603f}.feedback.bad{background:var(--red-bg);color:#862b34}
+.path{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:20px 0 2px}
+.node{padding:10px 13px;border-radius:15px;background:var(--soft-blue);font-weight:800;color:var(--blue-dark)}
+.arrow{color:var(--gold);font-weight:900;font-size:1.3rem}
+.actions{display:flex;justify-content:space-between;gap:12px;margin-top:22px}
+button{border:0;border-radius:16px;padding:13px 18px;font-size:1rem;font-weight:800;cursor:pointer;
+ box-shadow:0 9px 18px rgba(48,59,90,.14),inset 0 2px 0 rgba(255,255,255,.3)}
+button:disabled{opacity:.45;cursor:not-allowed}.primary{color:white;background:linear-gradient(145deg,var(--purple-soft),var(--purple))}
+.gold{color:#493500;background:linear-gradient(145deg,var(--gold-light),var(--gold))}
+.results{display:none;text-align:center}.results.show{display:block}
+.score{width:170px;height:170px;margin:12px auto 20px;border-radius:40%;display:grid;place-items:center;
+ background:linear-gradient(145deg,var(--gold-light),var(--gold));
+ box-shadow:14px 14px 28px rgba(131,94,22,.2),inset 13px 13px 23px rgba(255,255,255,.48),inset -12px -12px 22px rgba(100,67,0,.13);
+ transform:rotate(4deg)}.score div{transform:rotate(-4deg)}.score strong{display:block;font-size:2.1rem}
+.level{font-size:1.25rem;font-weight:850;color:var(--purple);margin-bottom:8px}
+.summary{max-width:700px;margin:0 auto;color:var(--muted);line-height:1.6}
+.review{text-align:left;margin-top:24px}.review-item{padding:15px 0;border-top:1px solid #e2e7ee}
+.review-item:first-child{border-top:0}.footer{text-align:center;color:var(--muted);font-size:.84rem;margin-top:15px}
+@media(max-width:650px){.hero,.panel{padding:20px}.actions{flex-direction:column}button{width:100%}.prow{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+ <h1>Innovation Diagnostic Challenge</h1>
+ <p>Step into the role of a junior innovation consultant. Diagnose each business situation, select the most suitable innovation approach, and predict its strategic implication.</p>
+ <div class="tags"><span class="tag">UMC735 Formative Assessment</span><span class="tag">6 Business Cases</span><span class="tag">Guided Feedback</span><span class="tag">No Data Stored</span></div>
+ <div class="progressbox"><div class="prow"><span id="progressText">Case 1 of 6</span><span id="scoreText">Cases mastered: 0</span></div><div class="track"><div class="bar" id="bar"></div></div></div>
+</header>
+
+<section class="panel" id="activity">
+ <span class="case-no" id="caseNo"></span>
+ <h2 class="case-title" id="caseTitle"></h2>
+ <p class="scenario" id="scenario"></p>
+ <div class="path"><span class="node">Diagnose</span><span class="arrow">→</span><span class="node">Decide</span><span class="arrow">→</span><span class="node">Predict</span></div>
+ <div id="steps"></div>
+ <div id="overallFeedback" class="feedback"></div>
+ <div class="actions"><button class="gold" id="checkBtn">Check My Diagnosis</button><button class="primary" id="nextBtn" disabled>Next Case</button></div>
+</section>
+
+<section class="panel results" id="results">
+ <h2>Your Diagnostic Profile</h2>
+ <div class="score"><div><strong id="finalScore"></strong><span>cases mastered</span></div></div>
+ <div class="level" id="level"></div>
+ <p class="summary" id="summary"></p>
+ <div class="review" id="review"></div>
+ <button class="primary" id="retryBtn">Try Again</button>
+</section>
+<div class="footer">Formative practice only. Your responses and results remain in this browser session and are not stored or transmitted.</div>
+</div>
+
+<script>
+const cases=[
+{
+ title:"Campus Café Queue Problem",
+ scenario:"A popular campus café has strong demand and loyal customers, but students complain that ordering and payment take too long during lunch. The owner has a limited budget and wants improvement within three months.",
+ steps:[
+  {q:"1. Diagnose the strongest signal.",opts:["Existing customers want a faster process","The market requires a completely new product category","The business must abandon its current model"],a:0},
+  {q:"2. Choose the innovation approach.",opts:["Incremental Innovation","Radical Innovation"],a:0},
+  {q:"3. Predict the likely strategic implication.",opts:["Lower relative risk and faster implementation by improving the existing service","High uncertainty and creation of an entirely new market"],a:0}
+ ],
+ explain:"The café's existing service remains valuable. The problem is speed and process efficiency, so gradual improvement is more suitable than fundamental transformation."
+},
+{
+ title:"Traditional Language School Meets AI",
+ scenario:"A language school notices learners moving toward AI tutors that provide personalised conversation, instant feedback, and 24-hour access. Younger customers increasingly expect adaptive digital learning rather than fixed classroom schedules.",
+ steps:[
+  {q:"1. Diagnose the strongest signal.",opts:["Minor dissatisfaction with an existing feature","New technology and changing customer behaviour","A need only for cheaper printing"],a:1},
+  {q:"2. Choose the innovation approach.",opts:["Incremental Innovation","Radical Innovation"],a:1},
+  {q:"3. Predict the likely strategic implication.",opts:["Only small refinements with minimal change","Greater uncertainty and resource needs, but potential for a new value proposition"],a:1}
+ ],
+ explain:"New technology and changing customer expectations can require a fundamental shift in how value is delivered, which aligns with radical innovation."
+},
+{
+ title:"Neighbourhood Bakery Packaging",
+ scenario:"A successful bakery receives repeated requests for recyclable packaging and clearer allergen labels. Customers like the products and the bakery does not need to change its core business.",
+ steps:[
+  {q:"1. Diagnose the strongest signal.",opts:["Direct customer feedback asking for improvements","A completely unfamiliar market","A disruptive technology replacing baked goods"],a:0},
+  {q:"2. Choose the innovation approach.",opts:["Incremental Innovation","Radical Innovation"],a:0},
+  {q:"3. Predict the likely strategic implication.",opts:["Continuous improvement that strengthens customer responsiveness","Creation of a fundamentally new industry"],a:0}
+ ],
+ explain:"The bakery can improve an existing offering in response to customer feedback. This is customer-responsive, incremental evolution."
+},
+{
+ title:"Banking Beyond the Branch",
+ scenario:"A financial services company sees customers rapidly adopting app-based banking, instant digital payments, and remote identity verification. New digital competitors operate without physical branches and use very different business models.",
+ steps:[
+  {q:"1. Diagnose the strongest signal.",opts:["Stable customer behaviour","Changing market behaviour and new business models","A request for a new branch paint colour"],a:1},
+  {q:"2. Choose the innovation approach.",opts:["Incremental Innovation","Radical Innovation"],a:1},
+  {q:"3. Predict the likely strategic implication.",opts:["Potential market transformation with higher investment and uncertainty","Only a small process adjustment with low uncertainty"],a:0}
+ ],
+ explain:"Changing market behaviour, digital technology, and new business models are important sources of radical innovation, but they also increase investment needs and uncertainty."
+},
+{
+ title:"Retail Loyalty Programme",
+ scenario:"A fashion retailer has a well-established customer base. Shoppers ask for easier reward redemption, personalised offers, and faster checkout. Management wants to improve loyalty without replacing the existing retail model.",
+ steps:[
+  {q:"1. Diagnose the strongest signal.",opts:["Customers are asking for improvements to an existing service","The entire retail category has become irrelevant","The company needs an unknown technology market"],a:0},
+  {q:"2. Choose the innovation approach.",opts:["Incremental Innovation","Radical Innovation"],a:0},
+  {q:"3. Predict the likely strategic implication.",opts:["Steady growth and efficiency while maintaining core relevance","Immediate creation of an entirely new market"],a:0}
+ ],
+ explain:"The retailer is refining an existing customer experience and loyalty system, matching the incremental innovation decision guide."
+},
+{
+ title:"Home Energy Disruption",
+ scenario:"A home-appliance company identifies an unmet need for an integrated system that automatically generates, stores, trades, and optimises household energy using new battery and AI technologies. The concept requires expertise the company does not currently possess.",
+ steps:[
+  {q:"1. Diagnose the strongest signal.",opts:["Routine improvement to an existing appliance","Unmet needs, new technology, and unfamiliar capabilities","A simple request for faster delivery"],a:1},
+  {q:"2. Choose the innovation approach.",opts:["Incremental Innovation","Radical Innovation"],a:1},
+  {q:"3. Predict the likely strategic implication.",opts:["Higher resource requirements and uncertainty with strong differentiation potential","Low-cost refinement of the current product only"],a:0}
+ ],
+ explain:"New technology, unmet needs, and unfamiliar capabilities point toward radical innovation, which offers stronger differentiation but requires greater resources and experimentation."
+}
+];
+
+let current=0, mastered=0, checked=false, records=[];
+const stepsEl=document.getElementById("steps");
+
+function render(){
+ checked=false;
+ const c=cases[current];
+ document.getElementById("caseNo").textContent=`Case ${current+1} of ${cases.length}`;
+ document.getElementById("caseTitle").textContent=c.title;
+ document.getElementById("scenario").textContent=c.scenario;
+ document.getElementById("progressText").textContent=`Case ${current+1} of ${cases.length}`;
+ document.getElementById("scoreText").textContent=`Cases mastered: ${mastered}`;
+ document.getElementById("bar").style.width=`${(current/cases.length)*100}%`;
+ document.getElementById("overallFeedback").className="feedback";
+ document.getElementById("checkBtn").disabled=false;
+ document.getElementById("nextBtn").disabled=true;
+ document.getElementById("nextBtn").textContent=current===cases.length-1?"View My Profile":"Next Case";
+ stepsEl.innerHTML="";
+ c.steps.forEach((s,i)=>{
+  const box=document.createElement("div");box.className="step";
+  box.innerHTML=`<h3>${s.q}</h3><p class="hint">${i===0?"Look for the key business signal.":i===1?"Select the approach that best fits your diagnosis.":"Consider risk, resources, speed, and market potential."}</p><div class="options"></div><div class="feedback" id="fb${i}"></div>`;
+  const opts=box.querySelector(".options");
+  s.opts.forEach((o,j)=>{
+   const lab=document.createElement("label");lab.className="option";
+   lab.innerHTML=`<input type="radio" name="s${i}" value="${j}"><span>${o}</span>`;
+   lab.querySelector("input").addEventListener("change",()=>{opts.querySelectorAll(".option").forEach(x=>x.classList.remove("selected"));lab.classList.add("selected")});
+   opts.appendChild(lab);
+  });
+  stepsEl.appendChild(box);
+ });
+}
+
+document.getElementById("checkBtn").addEventListener("click",()=>{
+ if(checked)return;
+ const c=cases[current];let answered=0,correct=0;
+ c.steps.forEach((s,i)=>{
+  const chosen=document.querySelector(`input[name="s${i}"]:checked`),fb=document.getElementById(`fb${i}`);
+  if(!chosen){fb.className="feedback show bad";fb.textContent="Please make a selection.";return}
+  answered++;
+  const val=Number(chosen.value),ok=val===s.a;if(ok)correct++;
+  document.querySelectorAll(`input[name="s${i}"]`).forEach((inp,j)=>{
+   const lab=inp.closest(".option");if(j===s.a)lab.classList.add("correct");if(inp.checked&&j!==s.a)lab.classList.add("wrong");inp.disabled=true;
+  });
+  fb.className=`feedback show ${ok?"good":"bad"}`;
+  fb.textContent=ok?"Good diagnosis.":"Review the highlighted answer and the case signal.";
+ });
+ if(answered<c.steps.length)return;
+ checked=true;
+ const isMastered=correct===3;if(isMastered)mastered++;
+ records.push({title:c.title,correct,mastered:isMastered});
+ const of=document.getElementById("overallFeedback");
+ of.className=`feedback show ${isMastered?"good":"bad"}`;
+ of.innerHTML=`<strong>${isMastered?"Case mastered!":"Learning opportunity"}</strong><br>${c.explain}<br><br>You completed ${correct} of 3 diagnostic steps correctly.`;
+ document.getElementById("scoreText").textContent=`Cases mastered: ${mastered}`;
+ document.getElementById("checkBtn").disabled=true;document.getElementById("nextBtn").disabled=false;
+});
+
+document.getElementById("nextBtn").addEventListener("click",()=>{
+ if(!checked)return;
+ if(current<cases.length-1){current++;render();window.scrollTo({top:0,behavior:"smooth"})}else showResults();
+});
+
+function showResults(){
+ document.getElementById("activity").style.display="none";
+ document.getElementById("results").classList.add("show");
+ document.getElementById("bar").style.width="100%";
+ document.getElementById("progressText").textContent="Diagnostic Challenge Complete";
+ document.getElementById("finalScore").textContent=`${mastered}/6`;
+ let level,msg;
+ if(mastered>=5){level="Strong Diagnostic Understanding";msg="You can confidently recognise business signals and connect them with an appropriate innovation approach and its strategic implications."}
+ else if(mastered>=3){level="Developing Strategic Understanding";msg="You understand several key signals. Review the cases you did not fully master and focus on why the business condition points toward incremental or radical innovation."}
+ else{level="Review the Innovation Decision Guide";msg="Use this result as guidance for further learning. Revisit customer needs, existing product value, technology shifts, market change, resource requirements, and uncertainty, then try again."}
+ document.getElementById("level").textContent=level;document.getElementById("summary").textContent=msg;
+ document.getElementById("review").innerHTML="<h2>Case Review</h2>"+records.map(r=>`<div class="review-item"><strong>${r.title}</strong><br><span style="color:${r.mastered?'var(--green)':'var(--red)'}">${r.correct}/3 diagnostic steps correct ${r.mastered?'· Mastered':'· Review recommended'}</span></div>`).join("");
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+document.getElementById("retryBtn").addEventListener("click",()=>location.reload());
+render();
+</script>
+</body>
+</html>
